@@ -1,6 +1,6 @@
 {
   "name": "@psouza.yuri/monitoria-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SDK simplificada para observabilidade completa em aplicações Node.js/NestJS com configuração via variáveis de ambiente",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
