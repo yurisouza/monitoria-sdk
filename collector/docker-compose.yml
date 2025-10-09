@@ -1,0 +1,21 @@
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:${COLLECTOR_VERSION:-0.130.1}
+    container_name: opentelemetry-collector
+    restart: ${COLLECTOR_RESTART:-unless-stopped}
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "13133:13133"  # Health check endpoint
+    environment:
+      # Configuração do SigNoz Cloud
+      SIGNOZ_ENDPOINT: ${SIGNOZ_ENDPOINT}
+      SIGNOZ_INGESTION_KEY: ${SIGNOZ_INGESTION_KEY}
+    volumes:
+      - ./collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:13133/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
