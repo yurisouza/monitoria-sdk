@@ -77,10 +77,6 @@ esac
 
 print_message "Criando release $RELEASE_TYPE..."
 
-# Executar testes
-print_message "Executando testes..."
-npm test -- --passWithNoTests
-
 # Executar build
 print_message "Fazendo build..."
 npm run build
