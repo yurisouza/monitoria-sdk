@@ -37,14 +37,28 @@ function initializeTelemetry(): void {
     const enableTracing = process.env.MONITORIA_ENABLE_TRACING !== 'false';
     const enableMetrics = process.env.MONITORIA_ENABLE_METRICS !== 'false';
 
-    // Validar configurações obrigatórias
-    if (serviceName === 'unknown-service') {
-      console.error('❌ MONITORIA_SERVICE_NAME é obrigatório');
-      return;
+    // Verificar se as configurações obrigatórias estão presentes
+    const missingConfigs: string[] = [];
+    
+    if (serviceName === 'unknown-service' || !process.env.MONITORIA_SERVICE_NAME) {
+      missingConfigs.push('MONITORIA_SERVICE_NAME');
+    }
+    
+    if (!collectorEndpoint || !process.env.MONITORIA_COLLECTOR_ENDPOINT) {
+      missingConfigs.push('MONITORIA_COLLECTOR_ENDPOINT');
     }
 
-    if (!collectorEndpoint) {
-      console.error('❌ MONITORIA_COLLECTOR_ENDPOINT é obrigatório');
+    if (missingConfigs.length > 0) {
+      console.warn('');
+      console.warn('⚠️  ═══════════════════════════════════════════════════════════');
+      console.warn('⚠️  Monitoria SDK não inicializada - Variáveis de ambiente ausentes:');
+      missingConfigs.forEach(config => {
+        console.warn(`⚠️   - ${config}`);
+      });
+      console.warn('⚠️   A SDK funcionará em modo degradado (apenas logs no console)');
+      console.warn('⚠️   Configure as variáveis acima para habilitar todos os recursos');
+      console.warn('⚠️  ═══════════════════════════════════════════════════════════');
+      console.warn('');
       return;
     }
 

@@ -19,15 +19,19 @@ npm install @psouza.yuri/monitoria-sdk
 
 ## 🔧 Configuração Rápida
 
-### 1. Variáveis de Ambiente Obrigatórias
+### 1. Variáveis de Ambiente (Recomendadas)
+
+A SDK funciona mesmo sem variáveis de ambiente configuradas, mas funcionará em **modo degradado** (apenas logs no console):
 
 ```bash
-# Nome do serviço
+# Nome do serviço (recomendado)
 MONITORIA_SERVICE_NAME=meu-servico
 
-# Endpoint do collector
+# Endpoint do collector (recomendado para enviar logs)
 MONITORIA_COLLECTOR_ENDPOINT=http://localhost:4318
 ```
+
+**Nota:** Sem estas variáveis, a SDK mostrará avisos no console, mas sua aplicação continuará funcionando normalmente.
 
 ### 2. Configuração no main.ts
 
@@ -53,11 +57,13 @@ bootstrap();
 
 ## 📋 Variáveis de Ambiente Completas
 
-### Configurações Obrigatórias
+### Configurações Recomendadas (Para Produção)
 ```bash
 MONITORIA_SERVICE_NAME=meu-servico
 MONITORIA_COLLECTOR_ENDPOINT=http://localhost:4318
 ```
+
+**⚠️ Sem estas variáveis:** A SDK funcionará em modo degradado (apenas logs no console) mas não interromperá sua aplicação.
 
 ### Configurações Opcionais
 ```bash
@@ -517,6 +523,20 @@ async function processarPagamento(pagamento: Pagamento) {
 - Throughput por ambiente
 
 ## 🚨 Troubleshooting
+
+### A SDK mostra avisos mas a aplicação funciona
+
+Isso é **esperado**! A SDK foi projetada para não quebrar sua aplicação mesmo sem variáveis de ambiente configuradas.
+
+Você verá mensagens como:
+```
+⚠️  Monitoria SDK não inicializada - Variáveis de ambiente ausentes:
+⚠️   - MONITORIA_SERVICE_NAME
+⚠️   - MONITORIA_COLLECTOR_ENDPOINT
+⚠️   A SDK funcionará em modo degradado (apenas logs no console)
+```
+
+**Solução:** Configure as variáveis de ambiente conforme documentado acima.
 
 ### Logs não aparecem no Collector
 - Verificar `MONITORIA_COLLECTOR_ENDPOINT`

@@ -18,6 +18,8 @@
 - `LoggingInterceptor` agora usa `LoggerSingleton` para garantir uma única instância
 - API simplificada: apenas `getLogger()` para obter o logger
 - Todas as referências ao `createLogger()` foram removidas da documentação
+- **Variáveis de ambiente não são mais obrigatórias** - A SDK funciona em modo degradado sem config
+- Validações resilientes: aplicação nunca quebra por falta de variáveis de ambiente
 
 ### Migration Guide
 

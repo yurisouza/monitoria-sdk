@@ -49,7 +49,7 @@ export class Logger {
       );
     }
 
-        // Configurar exportador collector
+        // Configurar exportador collector (opcional)
         if (this.config.collectorEndpoint) {
           const collectorConfig = {
             endpoint: this.config.collectorEndpoint,
@@ -61,7 +61,8 @@ export class Logger {
           this.collectorExporter = new CollectorExporter(collectorConfig);
           transports.push(new CollectorWinstonTransport(this.collectorExporter));
         } else {
-          throw new Error('collectorEndpoint é obrigatório.');
+          // Não quebra a aplicação, apenas não envia logs para collector
+          console.warn('⚠️  Monitoria SDK: MONITORIA_COLLECTOR_ENDPOINT não configurado. Logs serão enviados apenas para console.');
         }
 
     return winston.createLogger({

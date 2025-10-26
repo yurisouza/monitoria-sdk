@@ -14,6 +14,8 @@ class LoggerSingleton {
    * Configura e retorna a instância do Logger
    * Se já existe uma instância, retorna ela
    * Caso contrário, cria uma nova baseada nas configurações de ambiente
+   * 
+   * A SDK funciona mesmo sem variáveis de ambiente configuradas (modo degradado)
    */
   static getInstance(config: LoggerConfig = {}): Logger {
     // Se já existe instância e o config não mudou, retorna a instância existente
@@ -21,11 +23,11 @@ class LoggerSingleton {
       return this.instance;
     }
 
-    // Carregar configurações das variáveis de ambiente
+    // Carregar configurações das variáveis de ambiente (com defaults tolerantes)
     const serviceName = process.env.MONITORIA_SERVICE_NAME || 'unknown-service';
     const serviceVersion = process.env.MONITORIA_SERVICE_VERSION || '1.0.0';
     const environment = process.env.MONITORIA_ENVIRONMENT || 'development';
-    const collectorEndpoint = process.env.MONITORIA_COLLECTOR_ENDPOINT || 'http://localhost:4318';
+    const collectorEndpoint = process.env.MONITORIA_COLLECTOR_ENDPOINT || ''; // Vazio por padrão - não quebra
     const logLevel = process.env.MONITORIA_LOG_LEVEL || 'info';
     const enableConsole = process.env.MONITORIA_ENABLE_CONSOLE !== 'false';
     const enableTracing = process.env.MONITORIA_ENABLE_TRACING !== 'false';
