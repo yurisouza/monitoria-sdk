@@ -98,6 +98,180 @@ MONITORIA_LOG_LEVEL=info
 MONITORIA_COLLECTOR_ENDPOINT=https://collector.prod.com:4318
 ```
 
+## 📝 Enviando Logs em Qualquer Parte do Código
+
+### Usando o Singleton (Recomendado)
+
+A forma mais simples e prática é usar o `getLogger()` que retorna uma instância singleton do logger:
+
+```typescript
+// Em qualquer arquivo do seu código
+import { getLogger } from '@psouza.yuri/monitoria-sdk';
+
+// Em um service/controller/middleware
+export class TodoService {
+  private readonly logger = getLogger();
+
+  async create(todo: CreateTodoDto) {
+    // Log de início da operação
+    this.logger.info('Criando novo todo', {
+      request: {
+        title: todo.title,
+        category: todo.category,
+      }
+    });
+
+    try {
+      const result = await this.todoRepository.save(todo);
+      
+      // Log de sucesso
+      this.logger.info('Todo criado com sucesso', {
+        response: {
+          id: result.id,
+        }
+      });
+
+      return result;
+    } catch (error) {
+      // Log de erro
+      this.logger.error('Erro ao criar todo', {
+        error: {
+          message: error.message,
+          stack: error.stack,
+        }
+      });
+      throw error;
+    }
+  }
+}
+```
+
+### Exemplo em Controller
+
+```typescript
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { getLogger } from '@psouza.yuri/monitoria-sdk';
+
+@Controller('todos')
+export class TodosController {
+  private readonly logger = getLogger();
+
+  @Post()
+  async create(@Body() createTodoDto: CreateTodoDto) {
+    this.logger.info('POST /todos - Recebendo requisição', {
+      request: {
+        body: createTodoDto,
+      }
+    });
+
+    // Sua lógica aqui
+    return { message: 'Todo criado' };
+  }
+
+  @Get()
+  async findAll() {
+    this.logger.debug('GET /todos - Buscando todos os todos');
+    
+    // Sua lógica aqui
+    return [];
+  }
+}
+```
+
+### Exemplo em Middleware/Guard
+
+```typescript
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { getLogger } from '@psouza.yuri/monitoria-sdk';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  private readonly logger = getLogger();
+
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest();
+    
+    this.logger.debug('Verificando autenticação', {
+      request: {
+        path: request.url,
+        method: request.method,
+        userId: request.user?.id,
+      }
+    });
+
+    // Sua lógica de autenticação
+    return true;
+  }
+}
+```
+
+### Exemplo em Service com Contexto Customizado
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { getLogger } from '@psouza.yuri/monitoria-sdk';
+import { trace } from '@opentelemetry/api';
+
+@Injectable()
+export class PaymentService {
+  private readonly logger = getLogger();
+
+  async processPayment(paymentData: any) {
+    const span = trace.getActiveSpan();
+    const spanContext = span?.spanContext();
+
+    this.logger.info('Iniciando processamento de pagamento', {
+      request: {
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+      },
+      // Contexto de trace para correlacionar com spans
+      traceId: spanContext?.traceId,
+      spanId: spanContext?.spanId,
+    });
+
+    try {
+      // Processar pagamento
+      const result = await this.paymentGateway.charge(paymentData);
+      
+      this.logger.info('Pagamento processado com sucesso', {
+        response: {
+          transactionId: result.id,
+          status: result.status,
+        }
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Erro ao processar pagamento', {
+        error: {
+          message: error.message,
+          code: error.code,
+        }
+      });
+      throw error;
+    }
+  }
+}
+```
+
+### Fazendo Override da Configuração
+
+Se você precisar sobrescrever a configuração padrão do logger:
+
+```typescript
+import { getLogger } from '@psouza.yuri/monitoria-sdk';
+
+// Get logger com configuração customizada (apenas na primeira chamada)
+const logger = getLogger({ 
+  serviceName: 'custom-service' 
+});
+
+logger.info('Log com configuração customizada', {
+  context: { custom: true }
+});
+```
+
 ## 🔍 O que é Capturado Automaticamente
 
 ### Logs Estruturados

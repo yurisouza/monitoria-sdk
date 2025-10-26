@@ -5,6 +5,7 @@ import { Logger } from '../../logger/logger';
 import { LoggerConfig, LogLevel } from '../../types';
 import { trace } from '@opentelemetry/api';
 import { getSpanDuration, spanDurations } from './span-duration-tracker';
+import { LoggerSingleton } from '../../singleton';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -26,7 +27,8 @@ export class LoggingInterceptor implements NestInterceptor {
       enableMetrics: config.enableMetrics,
     };
 
-    this.logger = new Logger(loggerConfig);
+    // Usar o singleton para garantir uma única instância
+    this.logger = LoggerSingleton.getInstance(loggerConfig);
     
     // Limites de tamanho para evitar quebra da API
     this.maxBodySize = 1024 * 1024; // 1MB para body
