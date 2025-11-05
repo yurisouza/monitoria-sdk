@@ -214,7 +214,30 @@ export class CollectorExporter {
     const respSize = (logEntry as any)?.context?.response?.responseSize;
 
     if (method) attrs.push({ key: 'http.method', value: { stringValue: String(method) } });
-    if (urlPath) attrs.push({ key: 'url.path', value: { stringValue: String(urlPath) } });
+    
+    // Segmentar URL em path, route e query
+    if (urlPath) {
+      const urlString = String(urlPath);
+      
+      // url.path - manter completo (com query strings)
+      attrs.push({ key: 'url.path', value: { stringValue: urlString } });
+      
+      // Extrair route (sem query strings) e query (apenas query params)
+      const urlParts = urlString.split('?');
+      const route = urlParts[0];
+      const query = urlParts.length > 1 ? urlParts.slice(1).join('?') : null;
+      
+      // url.route - apenas o path sem query strings
+      if (route) {
+        attrs.push({ key: 'url.route', value: { stringValue: route } });
+      }
+      
+      // url.query - apenas os query parameters (sem o ?)
+      if (query) {
+        attrs.push({ key: 'url.query', value: { stringValue: query } });
+      }
+    }
+    
     if (Number.isFinite(Number(statusCode))) attrs.push({ key: 'http.status_code', value: { intValue: Number(statusCode) } });
     if (Number.isFinite(Number(respSize)))   attrs.push({ key: 'response.size', value: { intValue: Number(respSize) } });
     if (typeof effectiveDurationMs === 'number' && isFinite(effectiveDurationMs)) {
