@@ -458,6 +458,99 @@ No SigNoz:
 - `action` e `category` aparecerão como **attributes filtráveis**
 - Qualquer objeto/array complexo adicionado irá para **body.context** como detalhe navegável
 
+## 📊 Configurando Extração de Attributes para Group By no SigNoz
+
+O SigNoz não permite fazer group by em campos que estão dentro do `body`. Para permitir group by em campos específicos do body ou headers, você pode configurar quais campos devem ser extraídos para `attributes`.
+
+### Por que isso é necessário?
+
+- **Attributes**: Campos indexados e filtráveis, podem ser usados em group by
+- **Body**: Campos não indexados, apenas para navegação, não podem ser usados em group by
+
+### Configuração
+
+```typescript
+// main.ts
+import { setupLogging } from '@psouza.yuri/monitoria-sdk';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  setupLogging(app, {
+    extractAttributes: {
+      requestBody: ['category', 'status', 'priority'],
+      requestHeaders: ['x-user-id', 'x-correlation-id', 'x-tenant-id'],
+      responseBody: ['id', 'status'],
+      responseHeaders: ['x-request-id']
+    }
+  });
+  
+  await app.listen(3000);
+}
+```
+
+### Como funciona
+
+1. **requestBody**: Campos do `request.body` que serão extraídos para attributes
+   - Exemplo: `['category', 'status']` → attributes `body.category`, `body.status`
+
+2. **requestHeaders**: Headers do `request.headers` que serão extraídos
+   - Exemplo: `['x-user-id']` → attribute `header.x.user.id` (hífens viram pontos)
+   - Headers são case-insensitive
+
+3. **responseBody**: Campos do `response.body` que serão extraídos
+   - Exemplo: `['id', 'status']` → attributes `response.body.id`, `response.body.status`
+
+4. **responseHeaders**: Headers do `response.headers` que serão extraídos
+   - Exemplo: `['x-request-id']` → attribute `response.header.x.request.id`
+
+### Exemplo de Uso
+
+Com a configuração acima, quando você fizer um request:
+
+```typescript
+// POST /todos
+{
+  "category": "trabalho",
+  "priority": "high",
+  "description": "Descrição longa..."
+}
+```
+
+No SigNoz você terá:
+- **Attributes** (podem ser usados em group by):
+  - `body.category` = "trabalho"
+  - `body.priority` = "high"
+  - `header.x.user.id` = "12345" (se presente no header)
+- **Body completo** (para navegação):
+  - Todos os campos incluindo `description`
+
+### Notas Importantes
+
+- ✅ Apenas valores primitivos são extraídos (string, number, boolean, arrays de primitivos)
+- ✅ Objetos complexos continuam apenas no body
+- ✅ Se um campo não existir, é ignorado silenciosamente (não quebra o fluxo)
+- ✅ Headers são case-insensitive e normalizados (hífens viram pontos)
+- ✅ A configuração é aplicada automaticamente em todos os logs do interceptor
+
+### Exemplo Completo
+
+```typescript
+// main.ts
+setupLogging(app, {
+  extractAttributes: {
+    requestBody: ['category', 'status'],
+    requestHeaders: ['x-user-id']
+  }
+});
+
+// Agora todos os logs terão automaticamente:
+// - body.category e body.status extraídos do request.body
+// - header.x.user.id extraído do header x-user-id
+```
+
+Depois disso, você pode fazer group by por `body.category` ou `header.x.user.id` no SigNoz! 🎉
+
 ## 🔍 Criando Traces Customizados
 
 Para rastrear operações específicas do seu negócio, você pode criar spans customizados que aparecerão no trace distribuído.

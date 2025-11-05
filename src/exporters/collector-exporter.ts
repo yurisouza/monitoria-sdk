@@ -245,6 +245,130 @@ export class CollectorExporter {
       }
     }
 
+    // Extrair campos específicos do request.body para attributes
+    try {
+      const requestBody = (logEntry as any)?.context?.request?.body;
+      const bodyAttributesToExtract = (logEntry as any)?.context?.request?._bodyAttributes;
+      
+      if (requestBody && typeof requestBody === 'object' && !Array.isArray(requestBody)) {
+        if (Array.isArray(bodyAttributesToExtract) && bodyAttributesToExtract.length > 0) {
+          for (const fieldName of bodyAttributesToExtract) {
+            try {
+              if (requestBody.hasOwnProperty(fieldName)) {
+                const value = requestBody[fieldName];
+                if (this.isPrimitiveOrArrayOfPrimitives(value)) {
+                  attrs.push({ 
+                    key: `body.${fieldName}`, 
+                    value: this.toAnyValue(value) 
+                  });
+                }
+              }
+            } catch (fieldError) {
+              // Ignorar erro ao processar campo específico, continuar com próximo
+            }
+          }
+        }
+      }
+    } catch (requestBodyError) {
+      // Ignorar erro ao processar request.body, continuar normalmente
+    }
+
+    // Extrair campos específicos do request.headers para attributes
+    try {
+      const requestHeaders = (logEntry as any)?.context?.request?.headers;
+      const headerAttributesToExtract = (logEntry as any)?.context?.request?._headerAttributes;
+      
+      if (requestHeaders && typeof requestHeaders === 'object' && !Array.isArray(requestHeaders)) {
+        if (Array.isArray(headerAttributesToExtract) && headerAttributesToExtract.length > 0) {
+          for (const headerName of headerAttributesToExtract) {
+            try {
+              // Headers são case-insensitive, então vamos tentar diferentes variações
+              const headerKey = Object.keys(requestHeaders).find(
+                k => k.toLowerCase() === headerName.toLowerCase()
+              );
+              
+              if (headerKey) {
+                const value = requestHeaders[headerKey];
+                if (this.isPrimitiveOrArrayOfPrimitives(value)) {
+                  // Normalizar nome do header (usar lowercase e substituir hífens por pontos)
+                  const normalizedName = headerName.toLowerCase().replace(/-/g, '.');
+                  attrs.push({ 
+                    key: `header.${normalizedName}`, 
+                    value: this.toAnyValue(value) 
+                  });
+                }
+              }
+            } catch (headerError) {
+              // Ignorar erro ao processar header específico, continuar com próximo
+            }
+          }
+        }
+      }
+    } catch (requestHeadersError) {
+      // Ignorar erro ao processar request.headers, continuar normalmente
+    }
+
+    // Extrair campos específicos do response.body para attributes
+    try {
+      const responseBody = (logEntry as any)?.context?.response?.body;
+      const responseBodyAttributesToExtract = (logEntry as any)?.context?.response?._bodyAttributes;
+      
+      if (responseBody && typeof responseBody === 'object' && !Array.isArray(responseBody)) {
+        if (Array.isArray(responseBodyAttributesToExtract) && responseBodyAttributesToExtract.length > 0) {
+          for (const fieldName of responseBodyAttributesToExtract) {
+            try {
+              if (responseBody.hasOwnProperty(fieldName)) {
+                const value = responseBody[fieldName];
+                if (this.isPrimitiveOrArrayOfPrimitives(value)) {
+                  attrs.push({ 
+                    key: `response.body.${fieldName}`, 
+                    value: this.toAnyValue(value) 
+                  });
+                }
+              }
+            } catch (fieldError) {
+              // Ignorar erro ao processar campo específico, continuar com próximo
+            }
+          }
+        }
+      }
+    } catch (responseBodyError) {
+      // Ignorar erro ao processar response.body, continuar normalmente
+    }
+
+    // Extrair campos específicos do response.headers para attributes
+    try {
+      const responseHeaders = (logEntry as any)?.context?.response?.headers;
+      const responseHeaderAttributesToExtract = (logEntry as any)?.context?.response?._headerAttributes;
+      
+      if (responseHeaders && typeof responseHeaders === 'object' && !Array.isArray(responseHeaders)) {
+        if (Array.isArray(responseHeaderAttributesToExtract) && responseHeaderAttributesToExtract.length > 0) {
+          for (const headerName of responseHeaderAttributesToExtract) {
+            try {
+              const headerKey = Object.keys(responseHeaders).find(
+                k => k.toLowerCase() === headerName.toLowerCase()
+              );
+              
+              if (headerKey) {
+                const value = responseHeaders[headerKey];
+                if (this.isPrimitiveOrArrayOfPrimitives(value)) {
+                  const normalizedName = headerName.toLowerCase().replace(/-/g, '.');
+                  attrs.push({ 
+                    key: `response.header.${normalizedName}`, 
+                    value: this.toAnyValue(value) 
+                  });
+                }
+              }
+            } catch (headerError) {
+              // Ignorar erro ao processar header específico, continuar com próximo
+            }
+          }
+        }
+      }
+    } catch (responseHeadersError) {
+      // Ignorar erro ao processar response.headers, continuar normalmente
+    }
+
     // Sanitize
     return attrs.filter(a => {
       const val = a.value;

@@ -2,7 +2,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nes
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Logger } from '../../logger/logger';
-import { LoggerConfig, LogLevel } from '../../types';
+import { LoggerConfig, LogLevel, AttributeExtractionConfig } from '../../types';
 import { trace } from '@opentelemetry/api';
 import { getSpanDuration, spanDurations } from './span-duration-tracker';
 import { LoggerSingleton } from '../../singleton';
@@ -12,6 +12,7 @@ export class LoggingInterceptor implements NestInterceptor {
   private logger: Logger;
   private maxBodySize: number;
   private maxHeadersSize: number;
+  private extractAttributes?: AttributeExtractionConfig;
 
   constructor(config: any) {
     // Configuração do logger usando configuração simplificada
@@ -29,6 +30,9 @@ export class LoggingInterceptor implements NestInterceptor {
 
     // Usar o singleton para garantir uma única instância
     this.logger = LoggerSingleton.getInstance(loggerConfig);
+    
+    // Armazenar configuração de extração de attributes
+    this.extractAttributes = config.extractAttributes;
     
     // Limites de tamanho para evitar quebra da API
     this.maxBodySize = 1024 * 1024; // 1MB para body
@@ -178,12 +182,18 @@ export class LoggingInterceptor implements NestInterceptor {
                 userId,
                 body: this.sanitizeBody(body),
                 headers: this.sanitizeHeaders(headers),
+                // Aplicar configuração global de extração (se existir)
+                ...(this.extractAttributes?.requestBody && { _bodyAttributes: this.extractAttributes.requestBody }),
+                ...(this.extractAttributes?.requestHeaders && { _headerAttributes: this.extractAttributes.requestHeaders }),
               },
               response: {
                 statusCode,
                 body: this.sanitizeBody(data),
                 responseSize: this.calculateResponseSize(data),
                 headers: this.safeGetResponseHeaders(response),
+                // Aplicar configuração global de extração (se existir)
+                ...(this.extractAttributes?.responseBody && { _bodyAttributes: this.extractAttributes.responseBody }),
+                ...(this.extractAttributes?.responseHeaders && { _headerAttributes: this.extractAttributes.responseHeaders }),
               },
               performance: {
                 durationMs: duration,
@@ -251,6 +261,9 @@ export class LoggingInterceptor implements NestInterceptor {
                 userId,
                 body: this.sanitizeBody(body),
                 headers: this.sanitizeHeaders(headers),
+                // Aplicar configuração global de extração (se existir)
+                ...(this.extractAttributes?.requestBody && { _bodyAttributes: this.extractAttributes.requestBody }),
+                ...(this.extractAttributes?.requestHeaders && { _headerAttributes: this.extractAttributes.requestHeaders }),
               },
               error: {
                 message: error?.message || 'Unknown error',

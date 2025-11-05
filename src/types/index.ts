@@ -38,6 +38,40 @@ export interface LogEntry {
 }
 
 /**
+ * Configuração de quais campos extrair para attributes (permite group by no SigNoz)
+ * Campos extraídos aparecem como attributes filtráveis e podem ser usados em queries com group by
+ */
+export interface AttributeExtractionConfig {
+  /**
+   * Campos do request.body a extrair para attributes
+   * Ex: ['category', 'status', 'priority']
+   * Valores primitivos (string, number, boolean, arrays de primitivos) serão extraídos
+   */
+  requestBody?: string[];
+
+  /**
+   * Headers do request a extrair para attributes
+   * Ex: ['x-user-id', 'x-correlation-id', 'x-tenant-id']
+   * Headers são case-insensitive e serão normalizados (hífens viram pontos)
+   */
+  requestHeaders?: string[];
+
+  /**
+   * Campos do response.body a extrair para attributes
+   * Ex: ['status', 'id', 'type']
+   * Valores primitivos (string, number, boolean, arrays de primitivos) serão extraídos
+   */
+  responseBody?: string[];
+
+  /**
+   * Headers do response a extrair para attributes
+   * Ex: ['x-request-id', 'x-trace-id']
+   * Headers são case-insensitive e serão normalizados (hífens viram pontos)
+   */
+  responseHeaders?: string[];
+}
+
+/**
  * Configuração simplificada da SDK
  * Todas as configurações principais são capturadas via variáveis de ambiente MONITORIA_*
  * Esta interface permite apenas sobrescrever configurações específicas quando necessário
@@ -60,6 +94,13 @@ export interface LoggerConfig {
    * Se não fornecido, usa a variável de ambiente
    */
   minLogLevel?: LogLevel;
+
+  /**
+   * Campos a extrair para attributes (permite group by no SigNoz)
+   * Configure via parâmetro no setupLogging()
+   * Ex: { requestBody: ["category", "status"], requestHeaders: ["x-user-id"] }
+   */
+  extractAttributes?: AttributeExtractionConfig;
 }
 
 // Para NestJS - usar a mesma interface

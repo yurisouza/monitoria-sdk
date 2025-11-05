@@ -6,7 +6,7 @@ import { LoggerConfig } from '../../types';
  * Usa APENAS configurações de ambiente MONITORIA_*
  * 
  * @param app - Instância da aplicação NestJS
- * @param config - Configuração opcional para sobrescrever ENV vars (apenas serviceName e enableConsole)
+ * @param config - Configuração opcional para sobrescrever ENV vars (serviceName, enableConsole, extractAttributes)
  */
 export function setupLogging(app: any, config: LoggerConfig = {}): void {
   try {
@@ -39,6 +39,7 @@ export function setupLogging(app: any, config: LoggerConfig = {}): void {
       enableTracing,
       enableLogs,
       enableMetrics,
+      extractAttributes: config.extractAttributes,
     };
 
     console.log('✅ Configuração válida, registrando interceptor');
@@ -49,6 +50,9 @@ export function setupLogging(app: any, config: LoggerConfig = {}): void {
     console.log(`📝 Logs: ${finalConfig.enableLogs}`);
     console.log(`🔍 Tracing: ${finalConfig.enableTracing}`);
     console.log(`📈 Metrics: ${finalConfig.enableMetrics}`);
+    if (finalConfig.extractAttributes) {
+      console.log(`📋 Extract Attributes:`, JSON.stringify(finalConfig.extractAttributes, null, 2));
+    }
     
     // Registrar interceptor globalmente
     const interceptor = new LoggingInterceptor(finalConfig);

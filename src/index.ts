@@ -1,10 +1,10 @@
 // Exportações principais da Monitoria SDK
 import { Logger } from './logger/logger';
-import { LogLevel, LogEntry, LoggerConfig, NestLoggingConfig, shouldLogLevel } from './types';
+import { LogLevel, LogEntry, LoggerConfig, NestLoggingConfig, AttributeExtractionConfig, shouldLogLevel } from './types';
 import { LoggerSingleton } from './singleton';
 
 // Tipos e classes principais
-export { Logger, LogLevel, LogEntry, LoggerConfig, NestLoggingConfig, shouldLogLevel };
+export { Logger, LogLevel, LogEntry, LoggerConfig, NestLoggingConfig, AttributeExtractionConfig, shouldLogLevel };
 
 // NestJS adapter
 export { setupLogging } from './adapters/nestjs';
